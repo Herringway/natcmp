@@ -5,25 +5,38 @@ private import std.array;
 private import std.path;
 private import std.ascii;
 
-enum compareMode { Undefined, String, Integer };
-struct naturalCompareChunk {
+enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
+/**
+ * A chunk of text, representing either a string of numbers or a string of other characters.
+ * Do not use.
+ * Authors: Cameron "Herringway" Ross
+ */
+private struct naturalCompareChunk {
 	public char[] str;
 	public compareMode mode = compareMode.Undefined;
+	/**
+	 * Compares two chunks.
+	 * Integers are assumed to come before non-integers.
+	 * Returns: 0 on failure, [-1,1] on success
+	 */
 	public int opCmp(ref const naturalCompareChunk b) nothrow @safe {
+		scope(failure) return 0;
 		assert(this.mode != compareMode.Undefined, "Undefined chunk type (A)");
 		assert(   b.mode != compareMode.Undefined, "Undefined chunk type (B)");
+		foreach (character; str) {
+			if (this.mode == compareMode.Integer)
+				assert(character.isDigit, "Non-numeric value found in number string");
+			else
+				assert(!character.isDigit, "Numeric value found in non-numeric string");
+		}
 		if ((this.mode == compareMode.Integer) && (b.mode == compareMode.String)) {
 			return -1;
 		} else if ((this.mode == compareMode.String) && (b.mode == compareMode.Integer)) {
 			return 1;
 		} else if (this.mode == compareMode.String) {
-			try {
-				return min(1, max(-1, icmp(this.str, b.str)));
-			} catch (Exception) { return 0; }
+			return min(1, max(-1, icmp(this.str, b.str)));
 		} else if (this.mode == compareMode.Integer) {
-			try {
-				return cast(int)max(-1,min(1,to!long(this.str)-to!long(b.str)));
-			} catch (Exception) { return 0; }
+			return cast(int)max(-1,min(1,to!long(this.str)-to!long(b.str)));
 		}
 		assert(false, "Default value should never be returned!");
 	}
@@ -62,6 +75,17 @@ unittest {
 	chunkB = naturalCompareChunk("a".dup, compareMode.String);
 	assertEqual(chunkA.opCmp(chunkB), 1, "(c > a) > 1");
 }
+/**
+ * Compares two strings in a way that is natural to humans. 
+ * Integers come before non-integers, and integers are compared as if they were numbers instead of strings of characters.
+ * Examples:
+ * --------------------
+ * sort!compareNatural(["0", "10", "1"]) == ["0", "1", "10"]
+ * sort!compareNatural(["a", "c", "b"]) == ["a", "b", "c"]
+ * sort!compareNatural(["a1", "a"]) == ["a", "a1"]
+ * --------------------
+ * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
+ */
 int compareNatural(inout char[] a, inout char[] b) nothrow @safe {
 	naturalCompareChunk[] buildChunkList(inout char[] str) nothrow {
 		naturalCompareChunk tempChunk;
@@ -120,7 +144,16 @@ unittest {
 	assert(compareNatural("1000", "something") == -1, "1000 > something");
 	assert(compareNatural("something", "1000") == 1, "something < 1000");
 }
-
+/**
+ * Compares path strings naturally. Sorting paths naturally requires path separators to be treated specially.
+ * Examples:
+ * --------------------
+ * sort!comparePathsNatural(["a/b/c", "a/b/e", "a/b/f"]) == ["a/b/c", "a/b/d", "a/b/e"]
+ * sort!comparePathsNatural(["a1", "a"]) == ["a", "a1"]
+ * sort!comparePathsNatural(["a1/b", "a/b"]) == ["a/b", "a1/b"]
+ * --------------------
+ * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
+ */
 int comparePathsNatural(string pathA, string pathB) nothrow @safe {
 	auto pathSplitA = array(pathSplitter(pathA));
 	auto pathSplitB = array(pathSplitter(pathB));
