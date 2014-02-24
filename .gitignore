@@ -1,0 +1,3 @@
+.dub
+*.lib
+__test__library__.exe

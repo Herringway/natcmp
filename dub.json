@@ -1,0 +1,8 @@
+{
+	"name": "natcmp",
+	"description": "Compare strings in a human-natural way.",
+	"copyright": "Copyright © 2014, Cameron",
+	"authors": ["Cameron \"Herringway\" Ross"],
+	"license": "MIT",
+	"targetType": "library"
+}
