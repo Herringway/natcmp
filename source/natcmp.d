@@ -25,9 +25,9 @@ private struct naturalCompareChunk {
 		assert(   b.mode != compareMode.Undefined, "Undefined chunk type (B)");
 		foreach (character; str) {
 			if (this.mode == compareMode.Integer)
-				assert(character.isDigit, "Non-numeric value found in number string");
+				assert(character.isDigit(), "Non-numeric value found in number string");
 			else
-				assert(!character.isDigit, "Numeric value found in non-numeric string");
+				assert(!character.isDigit(), "Numeric value found in non-numeric string");
 		}
 		if ((this.mode == compareMode.Integer) && (b.mode == compareMode.String)) {
 			return -1;
