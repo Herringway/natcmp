@@ -78,11 +78,15 @@ unittest {
 /**
  * Compares two strings in a way that is natural to humans. 
  * Integers come before non-integers, and integers are compared as if they were numbers instead of strings of characters.
+ * Intended for usage in opCmp overloads.
  * Examples:
  * --------------------
- * sort!compareNatural(["0", "10", "1"]) == ["0", "1", "10"]
- * sort!compareNatural(["a", "c", "b"]) == ["a", "b", "c"]
- * sort!compareNatural(["a1", "a"]) == ["a", "a1"]
+ * struct someStruct {
+ *     string someText;
+ *     int opCmp(someStruct b) {
+ *          return compareNatural(this.someText, b.someText);
+ *     }
+ * }
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
@@ -144,17 +148,41 @@ unittest {
 	assert(compareNatural("1000", "something") == -1, "1000 > something");
 	assert(compareNatural("something", "1000") == 1, "something < 1000");
 }
+
+/** 
+* Natural string comparison function for use with phobos's sorting algorithm
+* Examples:
+* --------------------
+* assert(sort!compareNaturalSort(array(["0", "10", "1"])) == ["0", "1", "10"]);
+* assert(sort!compareNaturalSort(array(["a", "c", "b"])) == ["a", "b", "c"]);
+* assert(sort!compareNaturalSort(array(["a1", "a"])) == ["a", "a1"]);
+* --------------------
+* Returns: true if a < b
+*/
+bool compareNaturalSort(inout(char[]) a, inout(char[]) b) {
+	return compareNatural(b,a) > 0;
+}
+unittest {
+	assertEqual(compareNaturalSort("a", "b"), true);
+	assertEqual(array(sort!compareNaturalSort(["0", "10", "1"])), ["0", "1", "10"]);
+	assertEqual(array(sort!compareNaturalSort(["a", "c", "b"])), ["a", "b", "c"]);
+	assertEqual(array(sort!compareNaturalSort(["a1", "a"])), ["a", "a1"]);
+}
 /**
- * Compares path strings naturally. Sorting paths naturally requires path separators to be treated specially.
+ * Compares path strings naturally. Comparing paths naturally requires path separators to be treated specially.
+ * Intended for usage in opCmp overloads.
  * Examples:
  * --------------------
- * sort!comparePathsNatural(["a/b/c", "a/b/e", "a/b/f"]) == ["a/b/c", "a/b/d", "a/b/e"]
- * sort!comparePathsNatural(["a1", "a"]) == ["a", "a1"]
- * sort!comparePathsNatural(["a1/b", "a/b"]) == ["a/b", "a1/b"]
+ * struct someStruct {
+ *     string someText;
+ *     int opCmp(someStruct b) {
+ *          return comparePathsNatural(this.someText, b.someText);
+ *     }
+ * }
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(string pathA, string pathB) nothrow @safe {
+int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) nothrow @safe {
 	auto pathSplitA = array(pathSplitter(pathA));
 	auto pathSplitB = array(pathSplitter(pathB));
 	int outVal = 0;
@@ -165,7 +193,26 @@ int comparePathsNatural(string pathA, string pathB) nothrow @safe {
 	}
 	return outVal;
 }
+/** 
+ * Path comparison function for use with phobos's sorting algorithm
+ * Examples:
+ * --------------------
+ * assert(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])) == ["a/b/c", "a/b/d", "a/b/e"]);
+ * assert(array(sort!comparePathsNaturalSort(["a1", "a"])) == ["a", "a1"]);
+ * assert(array(sort!comparePathsNaturalSort(["a1/b", "a/b"])) == ["a/b", "a1/b"]);
+ * --------------------
+ * Returns: true if a < b
+ */
+bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) {
+	return comparePathsNatural(b,a) > 0;
+}
 
+unittest {
+	assertEqual(comparePathsNaturalSort("a/b", "a1/b"), true);
+	assert(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])) == ["a/b/c", "a/b/d", "a/b/e"]);
+	assert(array(sort!comparePathsNaturalSort(["a1", "a"])) == ["a", "a1"]);
+	assert(array(sort!comparePathsNaturalSort(["a1/b", "a/b"])) == ["a/b", "a1/b"]);
+}
 unittest {
 	assertEqual(comparePathsNatural("a/b/c", "a/b/d"), -1, "Final path component sorting failed");
 	assertEqual(comparePathsNatural("a/b/c", "a/b/d"), -1, "Final path component sorting failed");
@@ -178,7 +225,7 @@ unittest {
 	assertEqual(comparePathsNatural("a/b", "a1/b"), -1, "Appended chunk sorting failed");
 	assertEqual(comparePathsNatural("a1/b", "a/b"), 1, "Appended chunk sorting failed (2)");
 }
-private void assertEqual(T,U)(lazy T valA, lazy U valB, string message) {
+private void assertEqual(T,U)(lazy T valA, lazy U valB, string message = "") {
 	try {
 		if (valA != valB)
 			throw new core.exception.AssertError(format("%s: %s != %s",message, valA, valB));

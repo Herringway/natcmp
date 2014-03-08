@@ -5,11 +5,11 @@
 
 ## Example usage
 ```D
-sort!compareNatural(["0", "10", "1"]) == ["0", "1", "10"]
-sort!compareNatural(["a", "c", "b"]) == ["a", "b", "c"]
-sort!compareNatural(["a1", "a"]) == ["a", "a1"]
+assert(sort!compareNaturalSort(array(["0", "10", "1"])) == ["0", "1", "10"]);
+assert(sort!compareNaturalSort(array(["a", "c", "b"])) == ["a", "b", "c"]);
+assert(sort!compareNaturalSort(array(["a1", "a"])) == ["a", "a1"]);
 
-sort!comparePathsNatural(["a/b/c", "a/b/e", "a/b/f"]) == ["a/b/c", "a/b/d", "a/b/e"]
-sort!comparePathsNatural(["a1", "a"]) == ["a", "a1"]
-sort!comparePathsNatural(["a1/b", "a/b"]) == ["a/b", "a1/b"]
+assert(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])) == ["a/b/c", "a/b/d", "a/b/e"]);
+assert(array(sort!comparePathsNaturalSort(["a1", "a"])) == ["a", "a1"]);
+assert(array(sort!comparePathsNaturalSort(["a1/b", "a/b"])) == ["a/b", "a1/b"]);
 ```
