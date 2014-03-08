@@ -5,9 +5,9 @@
 
 ## Example usage
 ```D
-assert(sort!compareNaturalSort(array(["0", "10", "1"])) == ["0", "1", "10"]);
-assert(sort!compareNaturalSort(array(["a", "c", "b"])) == ["a", "b", "c"]);
-assert(sort!compareNaturalSort(array(["a1", "a"])) == ["a", "a1"]);
+assert(array(sort!compareNaturalSort(["0", "10", "1"])) == ["0", "1", "10"]);
+assert(array(sort!compareNaturalSort(["a", "c", "b"])) == ["a", "b", "c"]);
+assert(array(sort!compareNaturalSort(["a1", "a"])) == ["a", "a1"]);
 
 assert(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])) == ["a/b/c", "a/b/d", "a/b/e"]);
 assert(array(sort!comparePathsNaturalSort(["a1", "a"])) == ["a", "a1"]);
