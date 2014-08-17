@@ -1,5 +1,6 @@
 module natcmp;
 
+nothrow @safe:
 enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
 /**
  * A chunk of text, representing either a string of numbers or a string of other characters.
@@ -7,14 +8,15 @@ enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
  * Authors: Cameron "Herringway" Ross
  */
 private struct naturalCompareChunk {
-	public char[] str;
+	nothrow @safe pure:
+	public string str;
 	public compareMode mode = compareMode.Undefined;
 	/**
 	 * Compares two chunks.
 	 * Integers are assumed to come before non-integers.
 	 * Returns: 0 on failure, [-1,1] on success
 	 */
-	public int opCmp(ref const naturalCompareChunk b) nothrow @safe in {
+	public int opCmp(ref const naturalCompareChunk b) in {
 		import std.uni : isNumber;
 		assert(this.mode != compareMode.Undefined, "Undefined chunk type (A)");
 		assert(   b.mode != compareMode.Undefined, "Undefined chunk type (B)");
@@ -54,45 +56,45 @@ private struct naturalCompareChunk {
 unittest {
 	naturalCompareChunk chunkA;
 	naturalCompareChunk chunkB;
-	chunkA = naturalCompareChunk("a".dup, compareMode.String);
-	chunkB = naturalCompareChunk("a".dup, compareMode.String);
+	chunkA = naturalCompareChunk("a", compareMode.String);
+	chunkB = naturalCompareChunk("a", compareMode.String);
 	assertEqual(chunkA.opCmp(chunkB), 0, "Equal chunks tested as inequal");
-	chunkA = naturalCompareChunk("a".dup, compareMode.String);
-	chunkB = naturalCompareChunk("b".dup, compareMode.String);
+	chunkA = naturalCompareChunk("a", compareMode.String);
+	chunkB = naturalCompareChunk("b", compareMode.String);
 	assert(chunkA < chunkB, "a > b");
-	chunkA = naturalCompareChunk("b".dup, compareMode.String);
-	chunkB = naturalCompareChunk("a".dup, compareMode.String);
+	chunkA = naturalCompareChunk("b", compareMode.String);
+	chunkB = naturalCompareChunk("a", compareMode.String);
 	assert(chunkA > chunkB, "b < a");
-	chunkA = naturalCompareChunk("1".dup, compareMode.Integer);
-	chunkB = naturalCompareChunk("a".dup, compareMode.String);
+	chunkA = naturalCompareChunk("1", compareMode.Integer);
+	chunkB = naturalCompareChunk("a", compareMode.String);
 	assert(chunkA < chunkB, "1 > a");
-	chunkA = naturalCompareChunk("a".dup, compareMode.String);
-	chunkB = naturalCompareChunk("1".dup, compareMode.Integer);
+	chunkA = naturalCompareChunk("a", compareMode.String);
+	chunkB = naturalCompareChunk("1", compareMode.Integer);
 	assert(chunkA > chunkB, "a < 1");
-	chunkA = naturalCompareChunk("1".dup, compareMode.Integer);
-	chunkB = naturalCompareChunk("2".dup, compareMode.Integer);
+	chunkA = naturalCompareChunk("1", compareMode.Integer);
+	chunkB = naturalCompareChunk("2", compareMode.Integer);
 	assert(chunkA < chunkB, "1 > 2");
-	chunkA = naturalCompareChunk("1".dup, compareMode.Integer);
-	chunkB = naturalCompareChunk("3".dup, compareMode.Integer);
+	chunkA = naturalCompareChunk("1", compareMode.Integer);
+	chunkB = naturalCompareChunk("3", compareMode.Integer);
 	assertEqual(chunkA.opCmp(chunkB), -1, "(1 > 3) > 1");
-	chunkA = naturalCompareChunk("3".dup, compareMode.Integer);
-	chunkB = naturalCompareChunk("1".dup, compareMode.Integer);
+	chunkA = naturalCompareChunk("3", compareMode.Integer);
+	chunkB = naturalCompareChunk("1", compareMode.Integer);
 	assertEqual(chunkA.opCmp(chunkB), 1, "(3 > 1) < -1");
-	chunkA = naturalCompareChunk("a".dup, compareMode.String);
-	chunkB = naturalCompareChunk("c".dup, compareMode.String);
+	chunkA = naturalCompareChunk("a", compareMode.String);
+	chunkB = naturalCompareChunk("c", compareMode.String);
 	assertEqual(chunkA.opCmp(chunkB), -1, "(a > c) > 1");
-	chunkA = naturalCompareChunk("c".dup, compareMode.String);
-	chunkB = naturalCompareChunk("a".dup, compareMode.String);
+	chunkA = naturalCompareChunk("c", compareMode.String);
+	chunkB = naturalCompareChunk("a", compareMode.String);
 	assertEqual(chunkA.opCmp(chunkB), 1, "(c > a) > 1");
-	chunkA = naturalCompareChunk( "1".dup, compareMode.Integer);
-	chunkB = naturalCompareChunk("01".dup, compareMode.Integer);
+	chunkA = naturalCompareChunk( "1", compareMode.Integer);
+	chunkB = naturalCompareChunk("01", compareMode.Integer);
 	assertEqual(chunkA.opCmp(chunkB), 1, "(1 > 01) > 1");
 }
 /**
  * Splits a string into component chunks. Each component is treated either as an integer or a string.
  * Returns: A list of prepared string chunks
  */
-private naturalCompareChunk[] buildChunkList(inout char[] str) nothrow @safe in {
+private naturalCompareChunk[] buildChunkList(inout char[] str) pure in {
 	//Unsure if there are any constraints on input
 } out(result) {
 	foreach (chunk; result)
@@ -144,7 +146,7 @@ private naturalCompareChunk[] buildChunkList(inout char[] str) nothrow @safe in 
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int compareNatural(inout char[] a, inout char[] b) nothrow @safe in {
+int compareNatural(inout char[] a, inout char[] b) pure in {
 
 	} out(result) {
 		assert(result <= 1, "Result too large");
@@ -190,10 +192,10 @@ unittest {
 * --------------------
 * Returns: true if a < b
 */
-bool compareNaturalSort(inout(char[]) a, inout(char[]) b) {
+bool compareNaturalSort(inout(char[]) a, inout(char[]) b) pure {
 	return compareNatural(b,a) > 0;
 }
-unittest {
+@system unittest {
 	import std.algorithm : sort;
 	import std.array : array;
 	assertEqual(compareNaturalSort("a", "b"), true);
@@ -215,7 +217,7 @@ unittest {
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) nothrow @safe in {
+int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) pure in {
 	import std.path : isValidPath;
 	assert(pathA.isValidPath(), "First path is invalid");
 	assert(pathB.isValidPath(), "Second path is invalid");	
@@ -246,11 +248,11 @@ int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) nothrow @safe 
  * --------------------
  * Returns: true if a < b
  */
-bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) {
+bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) pure {
 	return comparePathsNatural(b,a) > 0;
 }
 
-unittest {
+@system unittest {
 	import std.algorithm : sort;
 	import std.array : array;
 	assertEqual(comparePathsNaturalSort("a/b", "a1/b"), true);
@@ -270,7 +272,7 @@ unittest {
 	assertEqual(comparePathsNatural("a/b", "a1/b"), -1, "Appended chunk sorting failed");
 	assertEqual(comparePathsNatural("a1/b", "a/b"), 1, "Appended chunk sorting failed (2)");
 }
-private void assertEqual(T,U)(lazy T valA, lazy U valB, string message = "") {
+private void assertEqual(T,U)(lazy T valA, lazy U valB, string message = "") pure {
 	import std.string : format;
 	try {
 		if (valA != valB)
