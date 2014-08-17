@@ -89,6 +89,9 @@ unittest {
 	chunkA = naturalCompareChunk( "1", compareMode.Integer);
 	chunkB = naturalCompareChunk("01", compareMode.Integer);
 	assertEqual(chunkA.opCmp(chunkB), 1, "(1 > 01) > 1");
+	chunkA = naturalCompareChunk( "01", compareMode.Integer);
+	chunkB = naturalCompareChunk("001", compareMode.Integer);
+	assertEqual(chunkA.opCmp(chunkB), 1, "(01 > 001) > 1");
 }
 /**
  * Splits a string into component chunks. Each component is treated either as an integer or a string.
