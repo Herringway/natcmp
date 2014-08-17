@@ -3,7 +3,7 @@ private import std.algorithm;
 private import std.conv;
 private import std.array;
 private import std.path;
-private import std.ascii;
+private import std.uni;
 
 enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
 /**
@@ -19,26 +19,37 @@ private struct naturalCompareChunk {
 	 * Integers are assumed to come before non-integers.
 	 * Returns: 0 on failure, [-1,1] on success
 	 */
-	public int opCmp(ref const naturalCompareChunk b) nothrow @safe {
-		scope(failure) return 0;
+	public int opCmp(ref const naturalCompareChunk b) nothrow @safe in {
 		assert(this.mode != compareMode.Undefined, "Undefined chunk type (A)");
 		assert(   b.mode != compareMode.Undefined, "Undefined chunk type (B)");
 		foreach (character; str) {
 			if (this.mode == compareMode.Integer)
-				assert(character.isDigit(), "Non-numeric value found in number string");
+				assert(character.isNumber(), "Non-numeric value found in number string");
 			else
-				assert(!character.isDigit(), "Numeric value found in non-numeric string");
+				assert(!character.isNumber(), "Numeric value found in non-numeric string");
 		}
-		if ((this.mode == compareMode.Integer) && (b.mode == compareMode.String)) {
-			return -1;
-		} else if ((this.mode == compareMode.String) && (b.mode == compareMode.Integer)) {
-			return 1;
-		} else if (this.mode == compareMode.String) {
-			return min(1, max(-1, icmp(this.str, b.str)));
-		} else if (this.mode == compareMode.Integer) {
-			return cast(int)max(-1,min(1,to!long(this.str)-to!long(b.str)));
+	} out(result) {
+		assert(result <= 1, "Result too large");
+		assert(result >= -1, "Result too small");
+	} body {
+		try {
+			if ((this.mode == compareMode.Integer) && (b.mode == compareMode.String)) {
+				return -1;
+			} else if ((this.mode == compareMode.String) && (b.mode == compareMode.Integer)) {
+				return 1;
+			} else if (this.mode == compareMode.String) {
+				return min(1, max(-1, icmp(this.str, b.str)));
+			} else if (this.mode == compareMode.Integer) {
+				auto int1 = to!long(this.str);
+				auto int2 = to!long(b.str);
+				if (int1 == int2)
+					return min(1, max(-1, icmp(this.str, b.str)));
+				return cast(int)max(-1,min(1,int1-int2));
+			}
+		} catch (Exception) {
+			return 0;
 		}
-		assert(false, "Default value should never be returned!");
+		assert(false);
 	}
 }
 unittest {
@@ -74,6 +85,49 @@ unittest {
 	chunkA = naturalCompareChunk("c".dup, compareMode.String);
 	chunkB = naturalCompareChunk("a".dup, compareMode.String);
 	assertEqual(chunkA.opCmp(chunkB), 1, "(c > a) > 1");
+	chunkA = naturalCompareChunk( "1".dup, compareMode.Integer);
+	chunkB = naturalCompareChunk("01".dup, compareMode.Integer);
+	assertEqual(chunkA.opCmp(chunkB), 1, "(1 > 01) > 1");
+}
+/**
+ * Splits a string into component chunks. Each component is treated either as an integer or a string.
+ * Returns: A list of prepared string chunks
+ */
+private naturalCompareChunk[] buildChunkList(inout char[] str) nothrow @safe in {
+	//Unsure if there are any constraints on input
+} out(result) {
+	foreach (chunk; result)
+		assert(chunk.mode != compareMode.Undefined, "Undefined chunk type");
+} body {
+	naturalCompareChunk tempChunk;
+	naturalCompareChunk[] output;
+	foreach (character; str) {
+		if (character.isNumber()) {
+			if (tempChunk.mode == compareMode.Integer)
+				tempChunk.str ~= character;
+			if (tempChunk.mode == compareMode.Undefined) {
+				tempChunk.str = [character];
+				tempChunk.mode = compareMode.Integer;
+			}
+			if (tempChunk.mode == compareMode.String) {
+				output ~= tempChunk;
+				tempChunk = naturalCompareChunk([character],compareMode.Integer);
+			}
+		} else {
+			if (tempChunk.mode == compareMode.String)
+				tempChunk.str ~= character;
+			if (tempChunk.mode == compareMode.Undefined) {
+				tempChunk.str = [character];
+				tempChunk.mode = compareMode.String;
+			}
+			if (tempChunk.mode == compareMode.Integer) {
+				output  ~= tempChunk;
+				tempChunk = naturalCompareChunk([character],compareMode.String);
+			}
+		}
+	}
+	output ~= tempChunk;
+	return output;
 }
 /**
  * Compares two strings in a way that is natural to humans. 
@@ -90,38 +144,12 @@ unittest {
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int compareNatural(inout char[] a, inout char[] b) nothrow @safe {
-	naturalCompareChunk[] buildChunkList(inout char[] str) nothrow {
-		naturalCompareChunk tempChunk;
-		naturalCompareChunk[] output;
-		foreach (character; str) {
-			if (character.isDigit()) {
-				if (tempChunk.mode == compareMode.Integer)
-					tempChunk.str ~= character;
-				if (tempChunk.mode == compareMode.Undefined) {
-					tempChunk.str = [character];
-					tempChunk.mode = compareMode.Integer;
-				}
-				if (tempChunk.mode == compareMode.String) {
-					output ~= tempChunk;
-					tempChunk = naturalCompareChunk([character],compareMode.Integer);
-				}
-			} else {
-				if (tempChunk.mode == compareMode.String)
-					tempChunk.str ~= character;
-				if (tempChunk.mode == compareMode.Undefined) {
-					tempChunk.str = [character];
-					tempChunk.mode = compareMode.String;
-				}
-				if (tempChunk.mode == compareMode.Integer) {
-					output  ~= tempChunk;
-					tempChunk = naturalCompareChunk([character],compareMode.String);
-				}
-			}
-		}
-		output ~= tempChunk;
-		return output;
-	}
+int compareNatural(inout char[] a, inout char[] b) nothrow @safe in {
+
+	} out(result) {
+		assert(result <= 1, "Result too large");
+		assert(result >= -1, "Result too small");
+	} body {
 	naturalCompareChunk[] chunkA = buildChunkList(a);
 	naturalCompareChunk[] chunkB = buildChunkList(b);
 	int cmpVal;
@@ -137,16 +165,18 @@ int compareNatural(inout char[] a, inout char[] b) nothrow @safe {
 	return 0;
 }
 unittest {
-	assert(compareNatural("10", "1") == 1, "1 > 10");
-	assert(compareNatural("010", "1") == 1, "1 > 010");
-	assert(compareNatural("10", "01") == 1, "01 > 10");
-	assert(compareNatural("10_1", "1_1") == 1, "1_1 > 10_1");
-	assert(compareNatural("10_1", "10_2") == -1, "10_1 > 10_2");
-	assert(compareNatural("10_2", "10_1") == 1, "10_1 > 10_2");
-	assert(compareNatural("a", "a1") == -1, "a > a1");
-	assert(compareNatural("a1", "a") == 1, "a1 < a");
-	assert(compareNatural("1000", "something") == -1, "1000 > something");
-	assert(compareNatural("something", "1000") == 1, "something < 1000");
+	assertEqual(compareNatural("10", "1"), 1, "1 > 10");
+	assertEqual(compareNatural("010", "1"), 1, "1 > 010");
+	assertEqual(compareNatural("10", "01"), 1, "01 > 10");
+	assertEqual(compareNatural("10_1", "1_1"), 1, "1_1 > 10_1");
+	assertEqual(compareNatural("10_1", "10_2"), -1, "10_1 > 10_2");
+	assertEqual(compareNatural("10_2", "10_1"), 1, "10_1 > 10_2");
+	assertEqual(compareNatural("a", "a1"), -1, "a > a1");
+	assertEqual(compareNatural("a1", "a"), 1, "a1 < a");
+	assertEqual(compareNatural("1000", "something"), -1, "1000 > something");
+	assertEqual(compareNatural("something", "1000"), 1, "something < 1000");
+	assertEqual(compareNatural("十", "〇"), 1, "Japanese: 10 > 0");
+	assertEqual(compareNatural("עֶ֫שֶׂר", "אֶ֫פֶס"), 1, "Biblical Hebrew: 10 > 0");
 }
 
 /** 
@@ -182,7 +212,13 @@ unittest {
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) nothrow @safe {
+int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) nothrow @safe in {
+	assert(pathA.isValidPath(), "First path is invalid");
+	assert(pathB.isValidPath(), "Second path is invalid");	
+} out(result) {
+	assert(result <= 1, "Result too large");
+	assert(result >= -1, "Result too small");
+} body {
 	auto pathSplitA = array(pathSplitter(pathA));
 	auto pathSplitB = array(pathSplitter(pathB));
 	int outVal = 0;
@@ -209,9 +245,9 @@ bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) {
 
 unittest {
 	assertEqual(comparePathsNaturalSort("a/b", "a1/b"), true);
-	assert(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])) == ["a/b/c", "a/b/d", "a/b/e"]);
-	assert(array(sort!comparePathsNaturalSort(["a1", "a"])) == ["a", "a1"]);
-	assert(array(sort!comparePathsNaturalSort(["a1/b", "a/b"])) == ["a/b", "a1/b"]);
+	assertEqual(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])), ["a/b/c", "a/b/d", "a/b/e"]);
+	assertEqual(array(sort!comparePathsNaturalSort(["a1", "a"])), ["a", "a1"]);
+	assertEqual(array(sort!comparePathsNaturalSort(["a1/b", "a/b"])), ["a/b", "a1/b"]);
 }
 unittest {
 	assertEqual(comparePathsNatural("a/b/c", "a/b/d"), -1, "Final path component sorting failed");
