@@ -1,9 +1,4 @@
-private import std.string;
-private import std.algorithm;
-private import std.conv;
-private import std.array;
-private import std.path;
-private import std.uni;
+module natcmp;
 
 enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
 /**
@@ -20,6 +15,7 @@ private struct naturalCompareChunk {
 	 * Returns: 0 on failure, [-1,1] on success
 	 */
 	public int opCmp(ref const naturalCompareChunk b) nothrow @safe in {
+		import std.uni : isNumber;
 		assert(this.mode != compareMode.Undefined, "Undefined chunk type (A)");
 		assert(   b.mode != compareMode.Undefined, "Undefined chunk type (B)");
 		foreach (character; str) {
@@ -32,6 +28,9 @@ private struct naturalCompareChunk {
 		assert(result <= 1, "Result too large");
 		assert(result >= -1, "Result too small");
 	} body {
+		import std.algorithm : min, max;
+		import std.conv : to;
+		import std.uni : icmp;
 		try {
 			if ((this.mode == compareMode.Integer) && (b.mode == compareMode.String)) {
 				return -1;
@@ -99,6 +98,7 @@ private naturalCompareChunk[] buildChunkList(inout char[] str) nothrow @safe in 
 	foreach (chunk; result)
 		assert(chunk.mode != compareMode.Undefined, "Undefined chunk type");
 } body {
+	import std.uni : isNumber;
 	naturalCompareChunk tempChunk;
 	naturalCompareChunk[] output;
 	foreach (character; str) {
@@ -150,6 +150,7 @@ int compareNatural(inout char[] a, inout char[] b) nothrow @safe in {
 		assert(result <= 1, "Result too large");
 		assert(result >= -1, "Result too small");
 	} body {
+	import std.algorithm : min;
 	naturalCompareChunk[] chunkA = buildChunkList(a);
 	naturalCompareChunk[] chunkB = buildChunkList(b);
 	int cmpVal;
@@ -193,6 +194,8 @@ bool compareNaturalSort(inout(char[]) a, inout(char[]) b) {
 	return compareNatural(b,a) > 0;
 }
 unittest {
+	import std.algorithm : sort;
+	import std.array : array;
 	assertEqual(compareNaturalSort("a", "b"), true);
 	assertEqual(array(sort!compareNaturalSort(["0", "10", "1"])), ["0", "1", "10"]);
 	assertEqual(array(sort!compareNaturalSort(["a", "c", "b"])), ["a", "b", "c"]);
@@ -213,12 +216,16 @@ unittest {
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
 int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) nothrow @safe in {
+	import std.path : isValidPath;
 	assert(pathA.isValidPath(), "First path is invalid");
 	assert(pathB.isValidPath(), "Second path is invalid");	
 } out(result) {
 	assert(result <= 1, "Result too large");
 	assert(result >= -1, "Result too small");
 } body {
+	import std.algorithm : min;
+	import std.array : array;
+	import std.path : pathSplitter;
 	auto pathSplitA = array(pathSplitter(pathA));
 	auto pathSplitB = array(pathSplitter(pathB));
 	int outVal = 0;
@@ -244,6 +251,8 @@ bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) {
 }
 
 unittest {
+	import std.algorithm : sort;
+	import std.array : array;
 	assertEqual(comparePathsNaturalSort("a/b", "a1/b"), true);
 	assertEqual(array(sort!comparePathsNaturalSort(["a/b/c", "a/b/e", "a/b/d"])), ["a/b/c", "a/b/d", "a/b/e"]);
 	assertEqual(array(sort!comparePathsNaturalSort(["a1", "a"])), ["a", "a1"]);
@@ -262,10 +271,11 @@ unittest {
 	assertEqual(comparePathsNatural("a1/b", "a/b"), 1, "Appended chunk sorting failed (2)");
 }
 private void assertEqual(T,U)(lazy T valA, lazy U valB, string message = "") {
+	import std.string : format;
 	try {
 		if (valA != valB)
-			throw new core.exception.AssertError(format("%s: %s != %s",message, valA, valB));
+			assert(true, format("%s: %s != %s",message, valA, valB));
 	} catch (Exception e) {
-		throw new core.exception.AssertError(e.msg);
+		assert(true, e.msg);
 	}
 }
