@@ -1,15 +1,14 @@
 module natcmp;
 
 nothrow @safe:
-enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
+private enum compareMode { Undefined, String, Integer }; ///Marks the chunk type
 /**
  * A chunk of text, representing either a string of numbers or a string of other characters.
- * Do not use.
  * Authors: Cameron "Herringway" Ross
  */
 private struct naturalCompareChunk {
 	nothrow @safe pure:
-	public string str;
+	public dstring str;
 	public compareMode mode = compareMode.Undefined;
 	/**
 	 * Compares two chunks.
@@ -97,7 +96,7 @@ unittest {
  * Splits a string into component chunks. Each component is treated either as an integer or a string.
  * Returns: A list of prepared string chunks
  */
-private naturalCompareChunk[] buildChunkList(inout char[] str) pure in {
+private naturalCompareChunk[] buildChunkList(inout dchar[] str) pure in {
 	//Unsure if there are any constraints on input
 } out(result) {
 	foreach (chunk; result)
@@ -141,7 +140,7 @@ private naturalCompareChunk[] buildChunkList(inout char[] str) pure in {
  * Examples:
  * --------------------
  * struct someStruct {
- *     string someText;
+ *     dstring someText;
  *     int opCmp(someStruct b) {
  *          return compareNatural(this.someText, b.someText);
  *     }
@@ -149,7 +148,7 @@ private naturalCompareChunk[] buildChunkList(inout char[] str) pure in {
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int compareNatural(inout char[] a, inout char[] b) pure in {
+int compareNatural(inout dchar[] a, inout dchar[] b) pure in {
 
 	} out(result) {
 		assert(result <= 1, "Result too large");
@@ -169,6 +168,24 @@ int compareNatural(inout char[] a, inout char[] b) pure in {
 	if (chunkA.length < chunkB.length)
 		return -1;
 	return 0;
+}
+/**
+ * Overload for 8-bit strings
+ */
+int compareNatural(inout char[] a, inout char[] b) pure {
+	import std.utf : toUTF32;
+	try {
+		return compareNatural(a.toUTF32(), b.toUTF32());
+	} catch (Exception) { return 0; }
+}
+/**
+ * Overload for 16-bit strings
+ */
+int compareNatural(inout wchar[] a, inout wchar[] b) pure {
+	import std.utf : toUTF32;
+	try {
+		return compareNatural(a.toUTF32(), b.toUTF32());
+	} catch (Exception) { return 0; }
 }
 unittest {
 	assertEqual(compareNatural("10", "1"), 1, "1 > 10");
@@ -195,8 +212,26 @@ unittest {
 * --------------------
 * Returns: true if a < b
 */
-bool compareNaturalSort(inout(char[]) a, inout(char[]) b) pure {
+bool compareNaturalSort(inout(dchar[]) a, inout(dchar[]) b) pure {
 	return compareNatural(b,a) > 0;
+}
+/**
+ * Overload for 8-bit strings
+ */
+bool compareNaturalSort(inout(char[]) a, inout(char[]) b) pure {
+	import std.utf : toUTF32;
+	try {
+		return compareNaturalSort(a.toUTF32(), b.toUTF32());
+	} catch (Exception) { return 0; }
+}
+/**
+ * Overload for 16-bit strings
+ */
+bool compareNaturalSort(inout(wchar[]) a, inout(wchar[]) b) pure {
+	import std.utf : toUTF32;
+	try {
+		return compareNaturalSort(a.toUTF32(), b.toUTF32());
+	} catch (Exception) { return 0; }
 }
 @system unittest {
 	import std.algorithm : sort;
@@ -220,7 +255,7 @@ bool compareNaturalSort(inout(char[]) a, inout(char[]) b) pure {
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) pure in {
+int comparePathsNatural(inout(dchar[]) pathA, inout(dchar[]) pathB) pure in {
 	import std.path : isValidPath;
 	assert(pathA.isValidPath(), "First path is invalid");
 	assert(pathB.isValidPath(), "Second path is invalid");	
@@ -241,6 +276,24 @@ int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) pure in {
 	}
 	return outVal;
 }
+/**
+ * Overload for 8-bit strings
+ */
+int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) pure {
+	import std.utf : toUTF32;
+	try {
+		return comparePathsNatural(pathA.toUTF32(), pathB.toUTF32());
+	} catch (Exception) { return 0; }
+}
+/**
+ * Overload for 8-bit strings
+ */
+int comparePathsNatural(inout(wchar[]) pathA, inout(wchar[]) pathB) pure {
+	import std.utf : toUTF32;
+	try {
+		return comparePathsNatural(pathA.toUTF32(), pathB.toUTF32());
+	} catch (Exception) { return 0; }
+}
 /** 
  * Path comparison function for use with phobos's sorting algorithm
  * Examples:
@@ -251,10 +304,28 @@ int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) pure in {
  * --------------------
  * Returns: true if a < b
  */
-bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) pure {
+bool comparePathsNaturalSort(inout(dchar[]) a, inout(dchar[]) b) pure {
 	return comparePathsNatural(b,a) > 0;
 }
 
+/**
+ * Overload for 8-bit strings
+ */
+bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) pure {
+	import std.utf : toUTF32;
+	try {
+		return comparePathsNaturalSort(a.toUTF32(), b.toUTF32());
+	} catch (Exception) { return 0; }
+}
+/**
+ * Overload for 8-bit strings
+ */
+bool comparePathsNaturalSort(inout(wchar[]) a, inout(wchar[]) b) pure {
+	import std.utf : toUTF32;
+	try {
+		return comparePathsNaturalSort(a.toUTF32(), b.toUTF32());
+	} catch (Exception) { return 0; }
+}
 @system unittest {
 	import std.algorithm : sort;
 	import std.array : array;
