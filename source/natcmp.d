@@ -286,7 +286,7 @@ int comparePathsNatural(inout(char[]) pathA, inout(char[]) pathB) pure {
 	} catch (Exception) { return 0; }
 }
 /**
- * Overload for 8-bit strings
+ * Overload for 16-bit strings
  */
 int comparePathsNatural(inout(wchar[]) pathA, inout(wchar[]) pathB) pure {
 	import std.utf : toUTF32;
@@ -318,7 +318,7 @@ bool comparePathsNaturalSort(inout(char[]) a, inout(char[]) b) pure {
 	} catch (Exception) { return 0; }
 }
 /**
- * Overload for 8-bit strings
+ * Overload for 16-bit strings
  */
 bool comparePathsNaturalSort(inout(wchar[]) a, inout(wchar[]) b) pure {
 	import std.utf : toUTF32;
