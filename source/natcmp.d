@@ -29,7 +29,7 @@ private struct naturalCompareChunk {
 		assert(result <= 1, "Result too large");
 		assert(result >= -1, "Result too small");
 	} body {
-		import std.algorithm : min, max;
+		import std.algorithm;
 		import std.conv : to;
 		import std.uni : icmp;
 		try {
@@ -38,13 +38,13 @@ private struct naturalCompareChunk {
 			} else if ((this.mode == compareMode.String) && (b.mode == compareMode.Integer)) {
 				return 1;
 			} else if (this.mode == compareMode.String) {
-				return min(1, max(-1, icmp(this.str, b.str)));
+				return clamp(icmp(this.str, b.str), -1, 1);
 			} else if (this.mode == compareMode.Integer) {
 				auto int1 = to!long(this.str);
 				auto int2 = to!long(b.str);
 				if (int1 == int2)
-					return min(1, max(-1, icmp(this.str, b.str)));
-				return cast(int)max(-1,min(1,int1-int2));
+					return clamp(icmp(this.str, b.str), -1, 1);
+				return cast(int)clamp(int1-int2, -1, 1);
 			}
 		} catch (Exception) {
 			return 0;
@@ -353,5 +353,11 @@ private void assertEqual(T,U)(lazy T valA, lazy U valB, string message = "") pur
 			assert(true, format("%s: %s != %s",message, valA, valB));
 	} catch (Exception e) {
 		assert(true, e.msg);
+	}
+}
+static if (!__traits(compiles, (clamp(0, 0, 0)))) { //For dmd <= 2.067 compatibility
+	import std.algorithm : min, max;
+	T clamp(T)(T val, T lesser, T greater) {
+		return min(greater, max(lesser, val));
 	}
 }
