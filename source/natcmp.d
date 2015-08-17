@@ -44,7 +44,7 @@ private struct naturalCompareChunk {
 				auto int2 = to!long(b.str);
 				if (int1 == int2)
 					return clamp(icmp(this.str, b.str), -1, 1);
-				return cast(int)clamp(int1-int2, -1, 1);
+				return cast(int)clamp(int1-int2, -1L, 1L);
 			}
 		} catch (Exception) {
 			return 0;
