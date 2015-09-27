@@ -1,9 +1,12 @@
 language: d
 sudo: false
 d:
-  - dmd-2.065.0
-  - dmd-2.066.1
-  - dmd-2.067.1
-  - ldc-0.14.0
-  - ldc-0.15.1
-  - gdc-4.9.0
+  - dmd
+  - ldc
+  - gdc
+install:
+  # Install doveralls from the latest github release
+  - wget -q -O - "http://bit.ly/Doveralls" | bash
+script:
+  - dub test -b unittest-cov
+  - ./doveralls
