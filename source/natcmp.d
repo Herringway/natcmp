@@ -255,7 +255,7 @@ bool compareNaturalSort(inout(wchar[]) a, inout(wchar[]) b) pure {
  * --------------------
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(inout(dchar[]) pathA, inout(dchar[]) pathB) pure in {
+int comparePathsNatural(in dchar[] pathA, in dchar[] pathB) pure in {
 	import std.path : isValidPath;
 	assert(pathA.isValidPath(), "First path is invalid");
 	assert(pathB.isValidPath(), "Second path is invalid");	
