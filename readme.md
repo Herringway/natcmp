@@ -1,5 +1,6 @@
 # Natcmp - A D library for comparing strings and paths in a human-natural way.
 [![Build Status](https://travis-ci.org/Herringway/natcmp.svg?branch=master)](https://travis-ci.org/Herringway/natcmp)
+[![Coverage Status](https://coveralls.io/repos/Herringway/natcmp/badge.svg?branch=master&service=github)](https://coveralls.io/github/Herringway/natcmp?branch=master)
 ## Supported platforms
 * Any with D compilers
 
