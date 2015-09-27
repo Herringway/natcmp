@@ -2,3 +2,4 @@
 *.lib
 *.exe
 docs
+dub.selections.json
