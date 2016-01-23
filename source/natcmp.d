@@ -1,11 +1,23 @@
+/**
+ * Natural string comparison
+ *
+ * This module provides functions for easily sorting and comparing strings.
+ * For implementing natural comparison methods in structs, see the NaturalComparable and NaturalPathComparable templates,
+ * or the compareNatural and comparePathsNatural functions for a more manual implementation.
+ *
+ * For sorting ranges of strings, see the compareNaturalSort and comparePathsNaturalSort functions.
+ *
+ * License: $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0).
+ * Authors: Cameron "Herringway" Ross
+ * Copyright: 2015-2016 Cameron "Herringway" Ross
+ */
 module natcmp;
-debug(natcmp) import std.stdio;
-private import std.traits : isSomeString;
+private import std.traits;
 @safe:
 private struct NaturalCompareChunk(T = const(dchar)[]) {
-	enum CompareMode { Undefined, String, Integer }
+	enum CompareMode { String, Integer }
 	public T str;
-	public CompareMode mode = CompareMode.Undefined;
+	public CompareMode mode;
 	this(T input) pure @safe nothrow @nogc {
 		import std.uni : isNumber;
 		str = input;
@@ -19,8 +31,6 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 	 */
 	public int opCmp(in NaturalCompareChunk b) const pure @safe in {
 		import std.uni : isNumber;
-		assert(this.mode != CompareMode.Undefined, "Undefined chunk type (A)");
-		assert(   b.mode != CompareMode.Undefined, "Undefined chunk type (B)");
 		foreach (character; str) {
 			if (this.mode == CompareMode.Integer)
 				assert(character.isNumber(), "Non-numeric value found in number string");
@@ -34,34 +44,38 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 		import std.algorithm : clamp, cmp;
 		import std.conv : to;
 		import std.uni : icmp;
-		if ((this.mode == CompareMode.Integer) && (b.mode == CompareMode.String)) {
-			return -1;
-		} else if ((this.mode == CompareMode.String) && (b.mode == CompareMode.Integer)) {
-			return 1;
-		} else if (this.mode == CompareMode.String) {
-			return clamp(icmp(this.str, b.str), -1, 1);
-		} else if (this.mode == CompareMode.Integer) {
-			auto int1 = this.str.to!long;
-			auto int2 = b.str.to!long;
-			debug(natcmp) writeln(int1, ",", int2);
-			if (int1 == int2)
-				return clamp(icmp(this.str, b.str), -1, 1);
-			if (int1 > int2)
+		if (this.mode != b.mode) {
+			if ((this.mode == CompareMode.Integer) && (b.mode == CompareMode.String))
+				return -1;
+			else
 				return 1;
-			return -1;
-		} else
-			assert(false);
+		} else {
+			final switch(this.mode) {
+				case CompareMode.String:
+					return clamp(icmp(this.str, b.str), -1, 1);
+				case CompareMode.Integer:
+					auto int1 = this.str.to!long;
+					auto int2 = b.str.to!long;
+					if (int1 == int2)
+						return clamp(icmp(this.str, b.str), -1, 1);
+					if (int1 > int2)
+						return 1;
+					return -1;
+			}
+		}
 	}
 	public bool opEquals(in NaturalCompareChunk b) const pure @safe {
 		import std.conv : to;
 		if (mode != b.mode)
 			return false;
-		else if (mode == CompareMode.String)
-			return str == b.str;
-		else if (mode == CompareMode.Integer)
-			return str.to!long == b.str.to!long;
-		else
-			assert(0);
+		else {
+			final switch(mode) {
+				case CompareMode.String:
+					return str == b.str;
+				case CompareMode.Integer:
+					return str.to!long == b.str.to!long;
+			}
+		}
 	}
 	public size_t toHash() const pure @safe nothrow {
 		return hashOf(str);
@@ -107,6 +121,8 @@ unittest {
 	chunkA = NaturalCompareChunk!dstring( "01");
 	chunkB = NaturalCompareChunk!dstring("001");
 	assert(chunkA > chunkB, "01 > 001");
+	auto testAssoc = [chunkA: "a", chunkB: "b"];
+	assert(testAssoc[chunkA] != testAssoc[chunkB]);
 }
 /**
  * Compares two strings in a way that is natural to humans.
@@ -130,25 +146,14 @@ int compareNatural(T)(in T a, in T b) @trusted if (isSomeString!T) out(result) {
 		.chunkBy!isNumber
 		.map!(x => NaturalCompareChunk!T(x[1].to!T));
 	foreach (chunkA, chunkB; zip(chunksA, chunksB)) {
-		debug(natcmp) writeln(chunkA, chunkB, chunkA>chunkB, chunkA==chunkB);
 		if (chunkA != chunkB)
 			return chunkA > chunkB ? 1 : -1;
 	}
-	debug(natcmp) writeln("len: ", chunksA.empty, ",", chunksB.empty);
 	if (!chunksA.empty && chunksB.empty)
 		return 1;
 	if (chunksA.empty && !chunksB.empty)
 		return -1;
 	return 0;
-}
-///
-unittest {
-	struct SomeStruct {
- 		dstring someText;
-		int opCmp(in SomeStruct b) const {
- 			return compareNatural(this.someText, b.someText);
-		}
-	}
 }
 unittest {
 	assert(compareNatural("10", "1") == 1, "1 > 10");
@@ -163,6 +168,68 @@ unittest {
 	assert(compareNatural("something", "1000") == 1, "something < 1000");
 	assert(compareNatural("十", "〇") == 1, "Japanese: 10 > 0");
 	assert(compareNatural("עֶ֫שֶׂר", "אֶ֫פֶס") == 1, "Biblical Hebrew: 10 > 0");
+}
+private mixin template NaturalComparableCommon(alias comparator, alias T) if (!isCallable!T || (functionAttributes!T & (FunctionAttribute.safe | FunctionAttribute.nothrow_ | FunctionAttribute.const_))) {
+	import std.string : split;
+	alias __NaturalComparabletype = typeof(this);
+	enum __NaturalComparablemember = T.stringof.split(".")[$-1].split("(")[0];
+    int opCmp(in __NaturalComparabletype b) const {
+    	return comparator(T, __traits(getMember, b, __NaturalComparablemember));
+    }
+    bool opEquals(in __NaturalComparabletype b) const {
+    	return T == __traits(getMember, b, __NaturalComparablemember);
+    }
+    size_t toHash() const @safe nothrow {
+    	return hashOf(T);
+    }
+}
+/**
+ * Automatically generates natural-comparing opCmp, opEquals and toHash methods for a particular property or method.
+ * Methods must be @safe, nothrow, and const.
+ */
+mixin template NaturalComparable(alias T) {
+	mixin NaturalComparableCommon!(compareNatural, T);
+}
+///
+unittest {
+	struct SomeStruct {
+		dstring someText;
+		mixin NaturalComparable!someText;
+	}
+	struct SomeStructWithFunction {
+		dstring _value;
+		dstring something() const nothrow @safe {
+			return _value;
+		}
+		mixin NaturalComparable!something;
+	}
+	assert(SomeStruct("100") > SomeStruct("2"));
+	assert(SomeStruct("100") == SomeStruct("100"));
+	assert(SomeStructWithFunction("100") > SomeStructWithFunction("2"));
+	assert(SomeStructWithFunction("100") == SomeStructWithFunction("100"));
+}
+unittest {
+	struct SomeStruct {
+		dstring someText;
+		mixin NaturalComparable!someText;
+	}
+	struct SomeStructWithFunction {
+		dstring _value;
+		dstring something() const nothrow @safe {
+			return _value;
+		}
+		mixin NaturalComparable!something;
+	}
+	{
+		auto data = [SomeStruct("1") : "test", SomeStruct("2"): "test2"];
+		assert(data[SomeStruct("1")] == "test");
+		assert(data[SomeStruct("2")] == "test2");
+	}
+	{
+		auto data = [SomeStructWithFunction("1") : "test", SomeStructWithFunction("2"): "test2"];
+		assert(data[SomeStructWithFunction("1")] == "test");
+		assert(data[SomeStructWithFunction("2")] == "test2");
+	}
 }
 
 /**
@@ -197,31 +264,18 @@ int comparePathsNatural(T)(in T pathA, in T pathB) if (isSomeString!T) in {
 	assert(result <= 1, "Result too large");
 	assert(result >= -1, "Result too small");
 } body {
-	import std.algorithm : min;
-	import std.array : array;
 	import std.path : pathSplitter;
-	auto pathSplitA = array(pathSplitter(pathA));
-	auto pathSplitB = array(pathSplitter(pathB));
+	import std.range : zip;
 	int outVal = 0;
-	foreach (index; 0..min(pathSplitA.length, pathSplitB.length)) {
-		outVal = compareNatural(pathSplitA[index], pathSplitB[index]);
+	foreach (componentA, componentB; zip(pathSplitter(pathA), pathSplitter(pathB))) {
+		outVal = compareNatural(componentA, componentB);
 		if (outVal != 0)
 			break;
 	}
 	return outVal;
 }
-///
 unittest {
-	struct SomePathStruct {
- 		dstring somePathText;
-		int opCmp(SomePathStruct b) const {
- 			return comparePathsNatural(this.somePathText, b.somePathText);
-		}
-		bool opEquals(SomePathStruct b) const {return somePathText == b.somePathText; }
-		auto toHash() const { return hashOf(somePathText); }
-	}
-}
-unittest {
+	import std.path : buildPath;
 	assert(comparePathsNatural("a/b/c", "a/b/d") == -1, "Final path component sorting failed");
 	assert(comparePathsNatural("a/b/c", "a/b/d") == -1, "Final path component sorting failed");
 	assert(comparePathsNatural("a/b/c", "a/b/c") == 0, "Identical path sorting failed");
@@ -232,6 +286,31 @@ unittest {
 	assert(comparePathsNatural("b/b/c", "a/b/c") == 1, "First path component sorting failed (2)");
 	assert(comparePathsNatural("a/b", "a1/b") == -1, "Appended chunk sorting failed");
 	assert(comparePathsNatural("a1/b", "a/b") == 1, "Appended chunk sorting failed (2)");
+	assert(comparePathsNatural(buildPath("a", "b", "c"), buildPath("a", "b", "d")) == -1, "failure to sort rangified path");
+}
+
+/**
+ * Automatically generates natural-path-comparing opCmp, opEquals and toHash methods for a particular property or method.
+ * Methods must be @safe, nothrow, and const.
+ */
+mixin template NaturalPathComparable(alias T) {
+	mixin NaturalComparableCommon!(comparePathsNatural, T);
+}
+///
+unittest {
+	struct SomePathStruct {
+		dstring somePathText;
+		mixin NaturalPathComparable!somePathText;
+	}
+	struct SomePathStructWithFunction {
+		dstring _value;
+		dstring path() const @safe nothrow {
+			return _value;
+		}
+		mixin NaturalPathComparable!path;
+	}
+	assert(SomePathStruct("a/b/c") < SomePathStruct("a/b/d"));
+	assert(SomePathStructWithFunction("a/b/c") < SomePathStructWithFunction("a/b/d"));
 }
 /**
  * Path comparison function for use with phobos's sorting algorithm
