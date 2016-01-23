@@ -8,4 +8,4 @@ produce the unexpected ordering of [10, 100, 2, a, b]. A human would expect an
 ordering more like [2, 10, 100, a, b]. This library provides the means to sort
 and compare strings in such a fashion.
 
-[Documentation](http://herringway.github.io/natcmp/)
+[Documentation](http://herringway.github.io/natcmp.html)
