@@ -66,14 +66,15 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 	}
 	public bool opEquals(in NaturalCompareChunk b) const pure @safe {
 		import std.conv : to;
+		import std.uni : icmp;
 		if (mode != b.mode)
 			return false;
 		else {
 			final switch(mode) {
 				case CompareMode.String:
-					return str == b.str;
+					return icmp(str,b.str) == 0;
 				case CompareMode.Integer:
-					return str.to!long == b.str.to!long;
+					return str == b.str;
 			}
 		}
 	}
@@ -168,6 +169,8 @@ unittest {
 	assert(compareNatural("something", "1000") == 1, "something < 1000");
 	assert(compareNatural("十", "〇") == 1, "Japanese: 10 > 0");
 	assert(compareNatural("עֶ֫שֶׂר", "אֶ֫פֶס") == 1, "Biblical Hebrew: 10 > 0");
+	assert(compareNatural("PG10", "Pg11") != compareNatural("Pg11", "PG10"));
+	assert(compareNatural("01", "1") != compareNatural("1", "01"));
 }
 private mixin template NaturalComparableCommon(alias comparator, alias T) if (!isCallable!T || (functionAttributes!T & (FunctionAttribute.safe | FunctionAttribute.nothrow_ | FunctionAttribute.const_))) {
 	import std.string : split;
