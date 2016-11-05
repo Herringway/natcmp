@@ -29,7 +29,7 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 	 *
 	 * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
 	 */
-	public int opCmp(in NaturalCompareChunk b) const pure @safe in {
+	public int opCmp(const NaturalCompareChunk b) const pure @safe in {
 		import std.uni : isNumber;
 		foreach (character; str) {
 			if (this.mode == CompareMode.Integer)
@@ -54,8 +54,8 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 				case CompareMode.String:
 					return clamp(icmp(this.str, b.str), -1, 1);
 				case CompareMode.Integer:
-					auto int1 = this.str.to!long;
-					auto int2 = b.str.to!long;
+					immutable int1 = this.str.to!long;
+					immutable int2 = b.str.to!long;
 					if (int1 == int2)
 						return clamp(icmp(this.str, b.str), -1, 1);
 					if (int1 > int2)
@@ -64,7 +64,7 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 			}
 		}
 	}
-	public bool opEquals(in NaturalCompareChunk b) const pure @safe {
+	public bool opEquals(const NaturalCompareChunk b) const pure @safe {
 		import std.conv : to;
 		import std.uni : icmp;
 		if (mode != b.mode)
@@ -132,7 +132,7 @@ unittest {
  *
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int compareNatural(T)(in T a, in T b) @trusted if (isSomeString!T) out(result) {
+int compareNatural(T)(const T a, const T b) if (isSomeString!T) out(result) {
 		assert(result <= 1, "Result too large");
 		assert(result >= -1, "Result too small");
 } body {
@@ -176,10 +176,10 @@ private mixin template NaturalComparableCommon(alias comparator, alias T) if (!i
 	import std.string : split;
 	alias __NaturalComparabletype = typeof(this);
 	enum __NaturalComparablemember = T.stringof.split(".")[$-1].split("(")[0];
-    int opCmp(in __NaturalComparabletype b) const {
+    int opCmp(const __NaturalComparabletype b) const {
     	return comparator(T, __traits(getMember, b, __NaturalComparablemember));
     }
-    bool opEquals(in __NaturalComparabletype b) const {
+    bool opEquals(const __NaturalComparabletype b) const {
     	return T == __traits(getMember, b, __NaturalComparablemember);
     }
     size_t toHash() const @safe nothrow {
@@ -240,8 +240,8 @@ unittest {
 *
 * Returns: true if a < b
 */
-bool compareNaturalSort(T)(in T a, in T b) if (isSomeString!T) {
-	return compareNatural(b,a) > 0;
+bool compareNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
+	return compareNatural(a,b) < 0;
 }
 ///
 unittest {
@@ -258,7 +258,7 @@ unittest {
  *
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(T)(in T pathA, in T pathB) if (isSomeString!T) in {
+int comparePathsNatural(T)(const T pathA, const T pathB) if (isSomeString!T) in {
 	import std.path : isValidPath;
 	import std.utf : toUTF8;
 	assert(pathA.isValidPath(), ("First path ("~pathA~") is invalid").toUTF8);
@@ -320,7 +320,7 @@ unittest {
  *
  * Returns: true if a < b
  */
-bool comparePathsNaturalSort(T)(in T a, in T b) if (isSomeString!T) {
+bool comparePathsNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
 	return comparePathsNatural(b,a) > 0;
 }
 ///
