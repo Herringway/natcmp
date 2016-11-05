@@ -13,7 +13,6 @@
  */
 module natcmp;
 private import std.traits;
-@safe:
 private struct NaturalCompareChunk(T = const(dchar)[]) {
 	enum CompareMode { String, Integer }
 	public T str;
@@ -31,7 +30,7 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 	 */
 	public int opCmp(const NaturalCompareChunk b) const pure @safe in {
 		import std.uni : isNumber;
-		foreach (character; str) {
+		foreach (character; this.str) {
 			if (this.mode == CompareMode.Integer)
 				assert(character.isNumber(), "Non-numeric value found in number string");
 			else
@@ -67,22 +66,21 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 	public bool opEquals(const NaturalCompareChunk b) const pure @safe {
 		import std.conv : to;
 		import std.uni : icmp;
-		if (mode != b.mode)
+		if (this.mode != b.mode)
 			return false;
 		else {
-			final switch(mode) {
+			final switch(this.mode) {
 				case CompareMode.String:
-					return icmp(str,b.str) == 0;
+					return icmp(this.str,b.str) == 0;
 				case CompareMode.Integer:
-					return str == b.str;
+					return this.str == b.str;
 			}
 		}
 	}
-	public size_t toHash() const pure @safe nothrow {
-		return hashOf(str);
-	}
+	alias str this;
+	//TODO: implement proper toHash for completeness
 }
-unittest {
+@safe pure unittest {
 	import std.algorithm : equal;
 	NaturalCompareChunk!dstring chunkA;
 	NaturalCompareChunk!dstring chunkB;
@@ -182,7 +180,7 @@ private mixin template NaturalComparableCommon(alias comparator, alias T) if (!i
     bool opEquals(const __NaturalComparabletype b) const {
     	return T == __traits(getMember, b, __NaturalComparablemember);
     }
-    size_t toHash() const @safe nothrow {
+    size_t toHash() const nothrow {
     	return hashOf(T);
     }
 }
@@ -291,7 +289,6 @@ unittest {
 	assert(comparePathsNatural("a1/b", "a/b") == 1, "Appended chunk sorting failed (2)");
 	assert(comparePathsNatural(buildPath("a", "b", "c"), buildPath("a", "b", "d")) == -1, "failure to sort rangified path");
 }
-
 /**
  * Automatically generates natural-path-comparing opCmp, opEquals and toHash methods for a particular property or method.
  * Methods must be @safe, nothrow, and const.
