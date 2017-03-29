@@ -3,3 +3,7 @@
 *.exe
 docs
 dub.selections.json
+*.lst
+*.a
+__dummy.html
+docs.json
