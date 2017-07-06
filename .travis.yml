@@ -15,12 +15,13 @@ install:
   - chmod +x doveralls
 script:
   - dub test -b unittest-cov
-  - dub build -b ddox
   - ./doveralls
+before_deploy:
+  - dub build -b ddox
 deploy:
   provider: pages
   skip_cleanup: true
   local_dir: docs
   github_token: $GITHUB_TOKEN
   on:
-    branch: master
+    tags: true
