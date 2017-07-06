@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>http://127.0.0.1/index.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp/compareNatural.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp/compareNaturalSort.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp/comparePathsNatural.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp/comparePathsNaturalSort.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp/NaturalComparable.html</loc></url>
+<url><loc>http://127.0.0.1/natcmp/NaturalPathComparable.html</loc></url>
+</urlset>

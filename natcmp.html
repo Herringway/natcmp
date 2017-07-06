@@ -1,0 +1,39 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<title>Module natcmp</title>
+<link rel="stylesheet" type="text/css" href="./styles/ddox.css"/>
+<link rel="stylesheet" href="./prettify/prettify.css" type="text/css"/>
+<script type="text/javascript" src="./scripts/jquery.js">/**/</script><script type="text/javascript" src="./scripts/ddox.js">/**/</script></head><body onload="setupDdox();"><nav id="main-nav"><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(40);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();"/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="./symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "./";
+$('#symbolSearchPane').show();</script></div><ul class="tree-view"><li><div class="module selected"><a href="./natcmp.html">natcmp</a></div></li></ul></nav><div id="main-contents"><h1>Module natcmp</h1><p>Natural string comparison
+</p><section><p>This module provides functions for easily sorting and comparing strings.
+ For implementing natural comparison methods in structs, see the NaturalComparable and NaturalPathComparable templates,
+ or the compareNatural and comparePathsNatural functions for a more manual implementation.
+</p>
+
+<p> For sorting ranges of strings, see the compareNaturalSort and comparePathsNaturalSort functions.
+</p>
+</section>
+
+<section></section><section><h2>Functions</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Description</th></tr><tr><td><code><a id="compareNatural" class="["public"]" href="./natcmp/compareNatural.html">compareNatural</a><span class="decoration">(a, b)</span></code></td><td>Compares two strings in a way that is natural to humans.
+ Integers come before non-integers, and integers are compared as if they were numbers instead of strings of characters.
+ Best used in opCmp overloads.
+</td></tr><tr><td><code><a id="compareNaturalSort" class="["public"]" href="./natcmp/compareNaturalSort.html">compareNaturalSort</a><span class="decoration">(a, b)</span></code></td><td>Natural string comparison function for use with phobos's sorting algorithm
+</td></tr><tr><td><code><a id="comparePathsNatural" class="["public"]" href="./natcmp/comparePathsNatural.html">comparePathsNatural</a><span class="decoration">(pathA, pathB)</span></code></td><td>Compares path strings naturally. Comparing paths naturally requires path separators to be treated specially.
+ Intended for usage in opCmp overloads.
+</td></tr><tr><td><code><a id="comparePathsNaturalSort" class="["public"]" href="./natcmp/comparePathsNaturalSort.html">comparePathsNaturalSort</a><span class="decoration">(a, b)</span></code></td><td>Path comparison function for use with phobos's sorting algorithm
+</td></tr></table></section><section><h2>Templates</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Description</th></tr><tr><td><code><a id="NaturalComparable" class="["public"]" href="./natcmp/NaturalComparable.html">NaturalComparable</a></code></td><td>Automatically generates natural-comparing opCmp, opEquals and toHash methods for a particular property or method.
+ Methods must be @safe, nothrow, and const.
+</td></tr><tr><td><code><a id="NaturalPathComparable" class="["public"]" href="./natcmp/NaturalPathComparable.html">NaturalPathComparable</a></code></td><td>Automatically generates natural-path-comparing opCmp, opEquals and toHash methods for a particular property or method.
+ Methods must be @safe, nothrow, and const.
+</td></tr></table></section><footer><table class="license-info"><tr><th>Authors</th><td><p>Cameron "Herringway" Ross
+</p>
+</td></tr><tr><th>Copyright</th><td><p>2015-2016 Cameron "Herringway" Ross
+</p>
+</td></tr><tr><th>License</th><td><p><a href="http://www.boost.org/LICENSE_1_0.txt">Boost License 1.0</a>.
+</p>
+</td></tr></table><p class="faint">Generated using the DDOX documentation generator</p></footer></div></body></html>
