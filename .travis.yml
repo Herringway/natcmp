@@ -2,7 +2,14 @@ language: d
 sudo: false
 d:
   - dmd
+  - dmd-beta
   - ldc
+  - gdc
+matrix:
+  allow_failures:
+    - d: dmd-beta
+    - d: ldc
+    - d: gdc
 install:
   - wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.3.1/doveralls_linux_travis"
   - chmod +x doveralls
