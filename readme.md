@@ -1,6 +1,9 @@
 # Natcmp
 [![Build Status](https://travis-ci.org/Herringway/natcmp.svg?branch=master)](https://travis-ci.org/Herringway/natcmp)
 [![Coverage Status](https://coveralls.io/repos/Herringway/natcmp/badge.svg?branch=master&service=github)](https://coveralls.io/github/Herringway/natcmp?branch=master)
+[![GitHub tag](https://img.shields.io/github/tag/herringway/natcmp.svg)](https://github.com/Herringway/natcmp)
+
+
 Natcmp is a library for comparing strings and paths in a way more familiar to humans.
 
 For a list of strings like [a, 100, 10, b, 2], sorting ASCIIbetically would
