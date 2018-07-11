@@ -154,7 +154,7 @@ int compareNatural(T)(const T a, const T b) if (isSomeString!T) out(result) {
 		return -1;
 	return 0;
 }
-unittest {
+@system pure unittest {
 	assert(compareNatural("10", "1") == 1, "1 > 10");
 	assert(compareNatural("010", "1") == 1, "1 > 010");
 	assert(compareNatural("10", "01") == 1, "01 > 10");
@@ -192,7 +192,7 @@ mixin template NaturalComparable(alias T) {
 	mixin NaturalComparableCommon!(compareNatural, T);
 }
 ///
-unittest {
+@system pure unittest {
 	struct SomeStruct {
 		dstring someText;
 		mixin NaturalComparable!someText;
@@ -209,7 +209,7 @@ unittest {
 	assert(SomeStructWithFunction("100") > SomeStructWithFunction("2"));
 	assert(SomeStructWithFunction("100") == SomeStructWithFunction("100"));
 }
-unittest {
+@system pure unittest {
 	struct SomeStruct {
 		dstring someText;
 		mixin NaturalComparable!someText;
@@ -242,7 +242,7 @@ bool compareNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
 	return compareNatural(a,b) < 0;
 }
 ///
-unittest {
+@system pure unittest {
 	import std.algorithm : sort, equal;
 	import std.array : array;
 	assert(compareNaturalSort("a", "b") == true);
@@ -275,7 +275,7 @@ int comparePathsNatural(T)(const T pathA, const T pathB) if (isSomeString!T) in 
 	}
 	return outVal;
 }
-unittest {
+@system pure unittest {
 	import std.path : buildPath;
 	assert(comparePathsNatural("a/b/c", "a/b/d") == -1, "Final path component sorting failed");
 	assert(comparePathsNatural("a/b/c", "a/b/d") == -1, "Final path component sorting failed");
@@ -297,7 +297,7 @@ mixin template NaturalPathComparable(alias T) {
 	mixin NaturalComparableCommon!(comparePathsNatural, T);
 }
 ///
-unittest {
+@system pure unittest {
 	struct SomePathStruct {
 		dstring somePathText;
 		mixin NaturalPathComparable!somePathText;
@@ -321,7 +321,7 @@ bool comparePathsNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
 	return comparePathsNatural(b,a) > 0;
 }
 ///
-unittest {
+@system pure unittest {
 	import std.algorithm : sort, equal;
 	import std.array : array;
 	assert(comparePathsNaturalSort("a/b", "a1/b") == true);
