@@ -10,12 +10,10 @@ matrix:
     - d: dmd-beta
     - d: ldc
     - d: gdc
-install:
-  - wget -O doveralls "https://github.com/ColdenCullen/doveralls/releases/download/v1.3.1/doveralls_linux_travis"
-  - chmod +x doveralls
 script:
   - dub test -b unittest-cov
-  - ./doveralls
+  - dub fetch doveralls
+  - dub run doveralls
 before_deploy:
   - dub build -b ddox
 deploy:
