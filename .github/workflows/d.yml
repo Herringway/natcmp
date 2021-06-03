@@ -1,0 +1,42 @@
+name: D
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        dc:
+          - dmd-latest
+          - ldc-latest
+          - dmd-beta
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dlang-community/setup-dlang@4c99aa991ce7d19dd3064de0a4f2f6b2f152e2d7
+      with:
+        compiler: ${{ matrix.dc }}
+    - name: 'Test'
+      run: |
+        dub test
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dlang-community/setup-dlang@4c99aa991ce7d19dd3064de0a4f2f6b2f152e2d7
+      with:
+        compiler: dmd-latest
+    - name: 'Install dependencies'
+      run: |
+          sudo apt-get install libcurl4-openssl-dev
+    - name: 'Test (with coverage)'
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: |
+        dub test -b unittest-cov
+        dub fetch doveralls
+        dub run doveralls
