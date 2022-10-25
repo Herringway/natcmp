@@ -12,7 +12,11 @@
  * Copyright: 2015-2016 Cameron "Herringway" Ross
  */
 module natcmp;
-private import std.traits;
+private import std.algorithm.searching : all;
+private import std.path : isValidPath;
+private import std.traits : FunctionAttribute, functionAttributes, isCallable, isSomeString;
+private import std.uni : isNumber;
+private import std.utf : toUTF8;
 private struct NaturalCompareChunk(T = const(dchar)[]) {
 	enum CompareMode { String, Integer }
 	public T str;
@@ -28,18 +32,11 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
 	 *
 	 * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
 	 */
-	public int opCmp(const NaturalCompareChunk b) const pure @safe in {
-		import std.uni : isNumber;
-		foreach (character; this.str) {
-			if (this.mode == CompareMode.Integer)
-				assert(character.isNumber(), "Non-numeric value found in number string");
-			else
-				assert(!character.isNumber(), "Numeric value found in non-numeric string");
-		}
-	} out(result) {
-		assert(result <= 1, "Result too large");
-		assert(result >= -1, "Result too small");
-	} body {
+	public int opCmp(const NaturalCompareChunk b) const pure @safe
+		out(result; result <= 1, "Result too large")
+		out(result; result >= -1, "Result too small")
+		in(str.all!(character => (mode == CompareMode.Integer) ^ !character.isNumber), "Mismatched value found in string")
+	{
 		import std.algorithm : clamp, cmp;
 		import std.conv : to;
 		import std.uni : icmp;
@@ -130,10 +127,10 @@ private struct NaturalCompareChunk(T = const(dchar)[]) {
  *
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int compareNatural(T)(const T a, const T b) if (isSomeString!T) out(result) {
-		assert(result <= 1, "Result too large");
-		assert(result >= -1, "Result too small");
-} body {
+int compareNatural(T)(const T a, const T b) if (isSomeString!T)
+	out(result; result <= 1, "Result too large")
+	out(result; result >= -1, "Result too small")
+{
 	import std.algorithm : min, map, chunkBy;
 	import std.uni : isNumber;
 	import std.range : walkLength, zip;
@@ -256,15 +253,12 @@ bool compareNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
  *
  * Returns: -1 if a comes before b, 0 if a and b are equal, 1 if a comes after b
  */
-int comparePathsNatural(T)(const T pathA, const T pathB) if (isSomeString!T) in {
-	import std.path : isValidPath;
-	import std.utf : toUTF8;
-	assert(pathA.isValidPath(), ("First path ("~pathA~") is invalid").toUTF8);
-	assert(pathB.isValidPath(), ("Second path ("~pathB~") is invalid").toUTF8);
-} out(result) {
-	assert(result <= 1, "Result too large");
-	assert(result >= -1, "Result too small");
-} body {
+int comparePathsNatural(T)(const T pathA, const T pathB) if (isSomeString!T)
+	in(pathA.isValidPath(), ("First path ("~pathA~") is invalid").toUTF8)
+	in(pathB.isValidPath(), ("Second path ("~pathB~") is invalid").toUTF8)
+	out(result; result <= 1, "Result too large")
+	out(result; result >= -1, "Result too small")
+{
 	import std.path : pathSplitter;
 	import std.range : zip;
 	int outVal = 0;
