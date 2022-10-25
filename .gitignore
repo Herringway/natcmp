@@ -7,3 +7,4 @@ dub.selections.json
 *.a
 __dummy.html
 docs.json
+*.pdb
