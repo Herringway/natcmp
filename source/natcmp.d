@@ -151,7 +151,7 @@ int compareNatural(T)(const T a, const T b) if (isSomeString!T)
 		return -1;
 	return 0;
 }
-@system pure unittest {
+@safe pure unittest {
 	assert(compareNatural("10", "1") == 1, "1 > 10");
 	assert(compareNatural("010", "1") == 1, "1 > 010");
 	assert(compareNatural("10", "01") == 1, "01 > 10");
@@ -189,7 +189,7 @@ mixin template NaturalComparable(alias T) {
 	mixin NaturalComparableCommon!(compareNatural, T);
 }
 ///
-@system pure unittest {
+@safe pure unittest {
 	struct SomeStruct {
 		dstring someText;
 		mixin NaturalComparable!someText;
@@ -206,7 +206,7 @@ mixin template NaturalComparable(alias T) {
 	assert(SomeStructWithFunction("100") > SomeStructWithFunction("2"));
 	assert(SomeStructWithFunction("100") == SomeStructWithFunction("100"));
 }
-@system pure unittest {
+@safe pure unittest {
 	struct SomeStruct {
 		dstring someText;
 		mixin NaturalComparable!someText;
@@ -239,7 +239,7 @@ bool compareNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
 	return compareNatural(a,b) < 0;
 }
 ///
-@system pure unittest {
+@safe pure unittest {
 	import std.algorithm : sort, equal;
 	import std.array : array;
 	assert(compareNaturalSort("a", "b") == true);
@@ -269,7 +269,7 @@ int comparePathsNatural(T)(const T pathA, const T pathB) if (isSomeString!T)
 	}
 	return outVal;
 }
-@system pure unittest {
+@safe pure unittest {
 	import std.path : buildPath;
 	assert(comparePathsNatural("a/b/c", "a/b/d") == -1, "Final path component sorting failed");
 	assert(comparePathsNatural("a/b/c", "a/b/d") == -1, "Final path component sorting failed");
@@ -291,7 +291,7 @@ mixin template NaturalPathComparable(alias T) {
 	mixin NaturalComparableCommon!(comparePathsNatural, T);
 }
 ///
-@system pure unittest {
+@safe pure unittest {
 	struct SomePathStruct {
 		dstring somePathText;
 		mixin NaturalPathComparable!somePathText;
@@ -315,7 +315,7 @@ bool comparePathsNaturalSort(T)(const T a, const T b) if (isSomeString!T) {
 	return comparePathsNatural(b,a) > 0;
 }
 ///
-@system pure unittest {
+@safe pure unittest {
 	import std.algorithm : sort, equal;
 	import std.array : array;
 	assert(comparePathsNaturalSort("a/b", "a1/b") == true);
